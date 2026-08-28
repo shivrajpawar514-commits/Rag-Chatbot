@@ -1,0 +1,2730 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GroundDoc-RAG: Advanced Academic Project Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- Mermaid.js for architecture diagrams -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
+</script>
+<style>
+  :root {
+    --bg-darker: #090d16;
+    --bg-dark: #0f172a;
+    --bg-card: rgba(30, 41, 59, 0.7);
+    --bg-input: #1e293b;
+    --sidebar-width: 280px;
+    --border-color: rgba(255, 255, 255, 0.08);
+    --border-accent: #6366f1;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    
+    --primary: #6366f1;
+    --primary-glow: rgba(99, 102, 241, 0.15);
+    --secondary: #a855f7;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --info: #06b6d4;
+    
+    --radius-lg: 16px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    --font-heading: 'Outfit', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background-color: var(--bg-darker);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* --- Sidebar Navigation --- */
+  aside {
+    width: var(--sidebar-width);
+    background-color: #0c111d;
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex-shrink: 0;
+    z-index: 10;
+  }
+
+  .sidebar-header {
+    padding: 24px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .brand-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-heading);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .brand-logo svg {
+    width: 24px;
+    height: 24px;
+    stroke: var(--primary);
+  }
+
+  .project-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    margin-top: 4px;
+  }
+
+  .nav-menu {
+    list-style: none;
+    padding: 20px 14px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .nav-item button {
+    width: 100%;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--font-heading);
+    font-size: 15px;
+    font-weight: 500;
+    text-align: left;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .nav-item button svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    transition: transform 0.2s ease;
+  }
+
+  .nav-item button:hover {
+    color: var(--text-primary);
+    background-color: rgba(255, 255, 255, 0.03);
+  }
+
+  .nav-item.active button {
+    color: #fff;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.05) 100%);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.1);
+  }
+
+  .nav-item.active button svg {
+    color: var(--primary);
+    transform: translateX(2px);
+  }
+
+  /* Academic Metadata in Sidebar Bottom */
+  .student-badge {
+    padding: 20px;
+    margin: 14px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+  }
+
+  .student-badge h4 {
+    font-family: var(--font-heading);
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+
+  .student-badge p {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .student-badge .roll {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--primary);
+    margin-top: 2px;
+  }
+
+  /* --- Main Content Area --- */
+  main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--bg-dark);
+  }
+
+  .top-navbar {
+    height: 70px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    flex-shrink: 0;
+  }
+
+  .top-navbar h2 {
+    font-family: var(--font-heading);
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  .api-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-secondary);
+    background-color: rgba(255, 255, 255, 0.02);
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--success);
+    box-shadow: 0 0 8px var(--success);
+    animation: status-pulse 2s infinite;
+  }
+
+  @keyframes status-pulse {
+    0% { opacity: 0.4; }
+    50% { opacity: 1; }
+    100% { opacity: 0.4; }
+  }
+
+  .content-body {
+    flex-grow: 1;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .tab-panel {
+    display: none;
+    height: 100%;
+    width: 100%;
+    animation: fade-in 0.3s ease;
+  }
+
+  .tab-panel.active {
+    display: flex;
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* --- General Styling Utilities --- */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    height: 100%;
+    width: 100%;
+  }
+
+  .dashboard-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    backdrop-filter: blur(12px);
+    box-shadow: var(--shadow);
+  }
+
+  .section-title {
+    font-family: var(--font-heading);
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-primary);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 18px;
+    font-family: var(--font-heading);
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+  }
+
+  .btn-secondary {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+  }
+
+  .btn-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .btn-danger {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+  }
+
+  .btn-danger:hover {
+    background-color: rgba(239, 68, 68, 0.25);
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    border-radius: 6px;
+    font-weight: 500;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+  }
+  .badge.success { background-color: rgba(16, 185, 129, 0.15); color: var(--success); border-color: rgba(16, 185, 129, 0.3); }
+  .badge.warning { background-color: rgba(245, 158, 11, 0.15); color: var(--warning); border-color: rgba(245, 158, 11, 0.3); }
+  .badge.info { background-color: rgba(6, 182, 212, 0.15); color: var(--info); border-color: rgba(6, 182, 212, 0.3); }
+  .badge.primary { background-color: rgba(99, 102, 241, 0.15); color: var(--primary); border-color: rgba(99, 102, 241, 0.3); }
+  .badge.secondary { background-color: rgba(168, 85, 247, 0.15); color: var(--secondary); border-color: rgba(168, 85, 247, 0.3); }
+
+  /* --- Tab 1: Chat Sandbox --- */
+  .chat-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border-right: 1px solid var(--border-color);
+    position: relative;
+  }
+
+  .chat-messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 24px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .chat-messages::-webkit-scrollbar {
+    width: 6px;
+  }
+  .chat-messages::-webkit-scrollbar-thumb {
+    background-color: rgba(255,255,255,0.06);
+    border-radius: 3px;
+  }
+
+  .msg-bubble {
+    display: flex;
+    gap: 16px;
+    max-width: 85%;
+    animation: rise 0.25s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg-bubble.user {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+  }
+
+  .msg-bubble.bot {
+    align-self: flex-start;
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    font-family: var(--font-heading);
+    flex-shrink: 0;
+  }
+
+  .msg-bubble.user .avatar {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: white;
+  }
+
+  .msg-bubble.bot .avatar {
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border-color);
+    color: var(--primary);
+  }
+
+  .msg-text-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .msg-text {
+    padding: 14px 18px;
+    border-radius: var(--radius-md);
+    font-size: 14.5px;
+    line-height: 1.6;
+  }
+
+  .msg-bubble.user .msg-text {
+    background-color: var(--primary);
+    color: white;
+    border-top-right-radius: 2px;
+  }
+
+  .msg-bubble.bot .msg-text {
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    color: #e2e8f0;
+    border-top-left-radius: 2px;
+  }
+
+  .msg-sources {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .source-chip {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--info);
+    background-color: rgba(6, 182, 212, 0.1);
+    border: 1px solid rgba(6, 182, 212, 0.2);
+    padding: 3px 8px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .source-chip::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    background-color: var(--info);
+    border-radius: 50%;
+  }
+
+  .chat-starter-container {
+    padding: 0 32px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .starter-chip {
+    background-color: rgba(255,255,255,0.02);
+    border: 1px solid var(--border-color);
+    padding: 8px 14px;
+    font-size: 13px;
+    border-radius: 20px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .starter-chip:hover {
+    color: var(--text-primary);
+    border-color: var(--primary);
+    background-color: rgba(99, 102, 241, 0.05);
+  }
+
+  .chat-composer {
+    padding: 16px 32px 24px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .composer-input-wrapper {
+    flex-grow: 1;
+    background-color: rgba(255,255,255,0.02);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 6px 16px;
+    display: flex;
+    align-items: center;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .composer-input-wrapper:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-glow);
+  }
+
+  .composer-input-wrapper textarea {
+    flex-grow: 1;
+    background: none;
+    border: none;
+    outline: none;
+    resize: none;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 14.5px;
+    padding: 8px 0;
+    max-height: 120px;
+  }
+
+  .composer-input-wrapper textarea::placeholder {
+    color: var(--text-muted);
+  }
+
+  .send-button {
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    border: none;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.2s;
+  }
+
+  .send-button:hover {
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  }
+
+  .send-button:active {
+    transform: scale(0.95);
+  }
+
+  .send-button:disabled {
+    background: var(--bg-input);
+    color: var(--text-muted);
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .send-button svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+  }
+
+  /* --- RAG Diagnostics Console (Right Column of Chat Sandbox) --- */
+  .diagnostics-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow-y: auto;
+    background-color: rgba(9, 13, 22, 0.6);
+    border-left: 1px solid var(--border-color);
+  }
+
+  .diagnostics-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .diagnostics-header h3 {
+    font-family: var(--font-heading);
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .diagnostics-section {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .telemetry-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+
+  .telemetry-label {
+    color: var(--text-secondary);
+  }
+
+  .telemetry-value {
+    font-family: var(--font-mono);
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  .bar-latency {
+    height: 6px;
+    background-color: var(--border-color);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 4px;
+    display: flex;
+  }
+
+  .bar-retrieval { background-color: var(--info); height: 100%; }
+  .bar-generation { background-color: var(--secondary); height: 100%; }
+
+  /* Circular Gauges for RAG Evaluation Triad */
+  .gauges-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .gauge-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: rgba(255,255,255,0.01);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 12px 6px;
+    text-align: center;
+  }
+
+  .gauge-svg {
+    width: 60px;
+    height: 60px;
+    transform: rotate(-90deg);
+  }
+
+  .gauge-bg {
+    fill: none;
+    stroke: rgba(255,255,255,0.03);
+    stroke-width: 4;
+  }
+
+  .gauge-fill {
+    fill: none;
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 175.9;
+    stroke-dashoffset: 175.9; /* 2 * PI * R (R=28) */
+    transition: stroke-dashoffset 0.8s ease;
+  }
+
+  .gauge-fill.relevance { stroke: var(--info); }
+  .gauge-fill.grounded { stroke: var(--success); }
+  .gauge-fill.answer { stroke: var(--warning); }
+
+  .gauge-text {
+    font-family: var(--font-heading);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-top: 6px;
+  }
+
+  .gauge-label {
+    font-size: 10px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  /* Retrieved Chunks Display */
+  .chunk-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .chunk-card {
+    background-color: rgba(255,255,255,0.02);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 12px;
+  }
+
+  .chunk-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 11px;
+  }
+
+  .chunk-source {
+    font-family: var(--font-mono);
+    color: var(--info);
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .chunk-similarity {
+    font-family: var(--font-mono);
+    color: var(--success);
+    font-weight: 500;
+  }
+
+  .chunk-text {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    max-height: 80px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .chunk-text::-webkit-scrollbar { width: 3px; }
+  .chunk-text::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); }
+
+  /* Prompt Viewer */
+  .prompt-wrapper {
+    position: relative;
+    margin-top: 12px;
+  }
+
+  .prompt-code {
+    background-color: #050810;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: #e2e8f0;
+    height: 180px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    line-height: 1.5;
+  }
+
+  .prompt-code::-webkit-scrollbar { width: 4px; }
+  .prompt-code::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); }
+
+  .btn-copy {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+
+  .btn-copy:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+  }
+
+  /* --- Tab 2: Document Hub --- */
+  .docs-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    padding: 32px;
+    height: 100%;
+    overflow-y: auto;
+  }
+
+  .docs-column {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* Uploader Card */
+  .upload-area {
+    border: 2px dashed rgba(99, 102, 241, 0.25);
+    background-color: rgba(99, 102, 241, 0.01);
+    border-radius: var(--radius-lg);
+    padding: 36px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .upload-area:hover {
+    border-color: var(--primary);
+    background-color: rgba(99, 102, 241, 0.03);
+  }
+
+  .upload-area svg {
+    width: 40px;
+    height: 40px;
+    stroke: var(--primary);
+    fill: none;
+    stroke-width: 1.5;
+    margin-bottom: 12px;
+  }
+
+  .upload-area h4 {
+    font-family: var(--font-heading);
+    font-size: 15px;
+    margin-bottom: 6px;
+  }
+
+  .upload-area p {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  /* Ingestion status card */
+  .ingestion-status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: rgba(99, 102, 241, 0.05);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    padding: 16px 20px;
+    border-radius: var(--radius-md);
+  }
+
+  .ingest-info-text h4 {
+    font-family: var(--font-heading);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .ingest-info-text p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  /* Tables */
+  .table-container {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 12px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+
+  th {
+    padding: 12px;
+    font-family: var(--font-heading);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  td {
+    padding: 12px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  tr:hover td {
+    background-color: rgba(255,255,255,0.01);
+  }
+
+  .tbl-filename {
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  /* Chunk Explorer scroll panel */
+  .chunk-explorer-results {
+    height: 360px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-right: 6px;
+    margin-top: 16px;
+  }
+  .chunk-explorer-results::-webkit-scrollbar { width: 4px; }
+  .chunk-explorer-results::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); }
+
+  .explorer-input-wrapper {
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+  }
+
+  .explorer-input-wrapper input {
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    width: 100%;
+    font-size: 14px;
+  }
+
+  /* --- Tab 3: Configuration Panel --- */
+  .config-layout {
+    padding: 32px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    height: 100%;
+    overflow-y: auto;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-group label {
+    display: block;
+    font-family: var(--font-heading);
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+
+  .form-control-slider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .form-control-slider input[type="range"] {
+    flex-grow: 1;
+    accent-color: var(--primary);
+  }
+
+  .slider-val {
+    width: 44px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    text-align: right;
+    color: var(--primary);
+    font-weight: 500;
+  }
+
+  .form-control-input {
+    width: 100%;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 14px;
+    outline: none;
+  }
+
+  .form-control-input:focus {
+    border-color: var(--primary);
+  }
+
+  textarea.form-control-input {
+    resize: vertical;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1.6;
+  }
+
+  /* Toggle Switches styling */
+  .switch-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .switch-group label {
+    margin-bottom: 0;
+    cursor: pointer;
+  }
+  .switch-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+  }
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #334155;
+    transition: .3s;
+    border-radius: 24px;
+  }
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+  }
+  input:checked + .slider {
+    background-color: var(--primary);
+  }
+  input:checked + .slider:before {
+    transform: translateX(20px);
+  }
+
+  /* --- Tab 4: Evaluation & Analytics --- */
+  .metrics-layout {
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    height: 100%;
+    overflow-y: auto;
+  }
+
+  .stats-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+
+  .stat-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    background-color: rgba(99, 102, 241, 0.1);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .stat-icon.success { background-color: rgba(16, 185, 129, 0.1); color: var(--success); }
+  .stat-icon.warning { background-color: rgba(245, 158, 11, 0.1); color: var(--warning); }
+  .stat-icon.info { background-color: rgba(6, 182, 212, 0.1); color: var(--info); }
+
+  .stat-icon svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+  .stat-content h5 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+  }
+
+  .stat-content h3 {
+    font-family: var(--font-heading);
+    font-size: 24px;
+    font-weight: 700;
+    margin-top: 4px;
+  }
+
+  .metrics-chart-box {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .svg-chart-container {
+    height: 240px;
+    width: 100%;
+    margin-top: 16px;
+    position: relative;
+  }
+
+  /* --- Tab 5: Project Details & Guide --- */
+  .info-layout {
+    padding: 32px;
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 24px;
+    height: 100%;
+    overflow-y: auto;
+  }
+
+  .profile-edit-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .profile-field {
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 12px;
+  }
+
+  .profile-field span {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+  }
+
+  .profile-field p {
+    font-family: var(--font-heading);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-top: 4px;
+  }
+
+  .architecture-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mermaid-wrapper {
+    flex-grow: 1;
+    background-color: rgba(0,0,0,0.15);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+  }
+
+  /* Spinner / Modal Loader */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--primary);
+    padding: 16px 20px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: var(--shadow);
+    z-index: 1000;
+    transform: translateY(120%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .toast.show {
+    transform: translateY(0);
+  }
+
+  .toast-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255,255,255,0.1);
+    border-top: 2px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .toast-content {
+    font-size: 13.5px;
+    font-weight: 500;
+  }
+
+  /* Ingest Overlay Modal */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(9, 13, 22, 0.8);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .modal-card {
+    background-color: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    width: 480px;
+    padding: 32px;
+    box-shadow: var(--shadow);
+    text-align: center;
+  }
+
+  .modal-card h3 {
+    font-family: var(--font-heading);
+    font-size: 20px;
+    margin-bottom: 24px;
+  }
+
+  .step-list {
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .step-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13.5px;
+    color: var(--text-secondary);
+  }
+
+  .step-icon {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1.5px solid var(--text-muted);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .step-item.active {
+    color: var(--primary);
+  }
+
+  .step-item.active .step-icon {
+    border-color: var(--primary);
+    background-color: rgba(99, 102, 241, 0.1);
+    animation: status-pulse 1.5s infinite;
+  }
+
+  .step-item.done {
+    color: var(--success);
+  }
+
+  .step-item.done .step-icon {
+    border-color: var(--success);
+    background-color: var(--success);
+  }
+
+  .step-item.done .step-icon::before {
+    content: "✓";
+    font-size: 10px;
+    color: white;
+    font-weight: bold;
+  }
+
+</style>
+</head>
+<body>
+
+  <!-- --- SIDEBAR NAV --- -->
+  <aside>
+    <div class="sidebar-header">
+      <div class="brand-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        GroundDoc-RAG
+      </div>
+      <div class="project-tag">Advanced RAG Framework</div>
+    </div>
+
+    <ul class="nav-menu">
+      <li class="nav-item active" data-tab="chat">
+        <button>
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Chat Sandbox
+        </button>
+      </li>
+      <li class="nav-item" data-tab="docs">
+        <button>
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Document Hub
+        </button>
+      </li>
+      <li class="nav-item" data-tab="config">
+        <button>
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Engine Parameters
+        </button>
+      </li>
+      <li class="nav-item" data-tab="metrics">
+        <button>
+          <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Analytics & Metrics
+        </button>
+      </li>
+      <li class="nav-item" data-tab="info">
+        <button>
+          <svg viewBox="0 0 24 24"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          Project Details
+        </button>
+      </li>
+    </ul>
+
+    <!-- Dynamic Student Badge -->
+    <div class="student-badge">
+      <h4>Student / Author</h4>
+      <p id="badge-name">Jane Doe</p>
+      <p class="roll" id="badge-roll">CS-2026-089</p>
+    </div>
+  </aside>
+
+  <!-- --- MAIN WORKSPACE --- -->
+  <main>
+    <div class="top-navbar">
+      <h2 id="navbar-title">Chat Sandbox</h2>
+      <div class="api-status">
+        <span class="status-dot"></span>
+        <span>RAG Engine Online</span>
+      </div>
+    </div>
+
+    <div class="content-body">
+      
+      <!-- TAB 1: Chat Sandbox Panel -->
+      <div class="tab-panel active" id="panel-chat">
+        <div class="grid-2">
+          <!-- Chat box columns -->
+          <div class="chat-container">
+            <div class="chat-messages" id="chat-messages">
+              <!-- Empty state message -->
+              <div style="margin: auto; text-align: center; max-width: 420px;" id="chat-empty">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.5" style="width: 54px; height: 54px; opacity: 0.6; margin-bottom: 16px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <h3 style="font-family: var(--font-heading); font-size: 18px; margin-bottom: 8px;">Cognitive RAG Sandbox</h3>
+                <p style="color: var(--text-secondary); font-size: 13.5px; line-height: 1.5;">Query your system using Naive vector, Hybrid (RRF) search, or Cognitive expansion logic. Execution pathing, routing routes, query variants, and fusion weights will display live in the telemetry console.</p>
+              </div>
+            </div>
+
+            <!-- Starter chips -->
+            <div class="chat-starter-container" id="starter-chips">
+              <span class="starter-chip" onclick="quickSend('What is the eligibility requirement for remote work?')">Remote Eligibility</span>
+              <span class="starter-chip" onclick="quickSend('How much is the home office stipend and how do I request it?')">Home Office Stipend</span>
+              <span class="starter-chip" onclick="quickSend('Summarize the remote policy details.')">Route Summary</span>
+              <span class="starter-chip" onclick="quickSend('Hello! Who are you?')">Route General</span>
+            </div>
+
+            <!-- Composer input -->
+            <div class="chat-composer">
+              <div class="composer-input-wrapper">
+                <textarea id="chat-input" rows="1" placeholder="Ask a question..." autofocus></textarea>
+              </div>
+              <button class="send-button" id="chat-send-btn" aria-label="Send">
+                <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Live Pipeline Diagnostics Sidebar -->
+          <div class="diagnostics-panel">
+            <div class="diagnostics-header">
+              <h3>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                Pipeline Diagnostics
+              </h3>
+            </div>
+
+            <!-- RAG Route decision logs -->
+            <div class="diagnostics-section">
+              <h4 class="section-title">Cognitive Routing & Execution Path</h4>
+              <div class="telemetry-row">
+                <span class="telemetry-label">Active Mode:</span>
+                <span id="diag-active-mode" class="badge primary">Standard</span>
+              </div>
+              <div class="telemetry-row">
+                <span class="telemetry-label">Query Route:</span>
+                <span id="diag-route-decision" class="badge success">RAG</span>
+              </div>
+              <div class="telemetry-row">
+                <span class="telemetry-label">Reranker State:</span>
+                <span id="diag-rerank-applied" class="badge warning">Off</span>
+              </div>
+
+              <!-- Query variant expansion box -->
+              <div id="diag-expansion-box" style="display: none; margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border-color);">
+                <span class="telemetry-label" style="font-size: 12px; font-weight:600; display:block; margin-bottom:6px;">Multi-Query Variants:</span>
+                <ul id="diag-expansion-list" style="margin-left: 16px; font-size: 11.5px; color: var(--info); line-height: 1.5; font-family: var(--font-body);">
+                </ul>
+              </div>
+
+              <!-- RRF Hybrid weights table -->
+              <div id="diag-hybrid-box" style="display: none; margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border-color);">
+                <span class="telemetry-label" style="font-size: 12px; font-weight:600; display:block; margin-bottom:6px;">RRF Fusion Weights:</span>
+                <div class="table-container" style="margin-top: 4px;">
+                  <table style="font-size: 10.5px;">
+                    <thead>
+                      <tr>
+                        <th>Source File</th>
+                        <th>Vec Rank</th>
+                        <th>BM25 Rank</th>
+                        <th>RRF Score</th>
+                      </tr>
+                    </thead>
+                    <tbody id="diag-hybrid-table">
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Latency telemetry -->
+            <div class="diagnostics-section">
+              <h4 class="section-title">Execution Latency</h4>
+              <div class="telemetry-row">
+                <span class="telemetry-label">Document Retrieval:</span>
+                <span class="telemetry-value" id="t-retrieve">0 ms</span>
+              </div>
+              <div class="telemetry-row">
+                <span class="telemetry-label">LLM Synthesis:</span>
+                <span class="telemetry-value" id="t-gen">0 ms</span>
+              </div>
+              <div class="telemetry-row" style="border-top: 1px solid var(--border-color); padding-top: 8px; margin-top: 4px;">
+                <span class="telemetry-label" style="font-weight: 600; color: var(--text-primary);">Total Latency:</span>
+                <span class="telemetry-value" style="color: var(--primary); font-weight: bold;" id="t-total">0 ms</span>
+              </div>
+              <div class="bar-latency">
+                <div class="bar-retrieval" id="bar-retrieval" style="width: 0%"></div>
+                <div class="bar-generation" id="bar-generation" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <!-- RAG Triad Evaluator -->
+            <div class="diagnostics-section">
+              <h4 class="section-title">RAG Triad Heuristic Scores</h4>
+              <div class="gauges-container">
+                <div class="gauge-card">
+                  <svg class="gauge-svg">
+                    <circle class="gauge-bg" cx="30" cy="30" r="28" />
+                    <circle class="gauge-fill relevance" id="g-relevance-ring" cx="30" cy="30" r="28" />
+                  </svg>
+                  <div class="gauge-text" id="g-relevance-val">-</div>
+                  <div class="gauge-label">Context Relevance</div>
+                </div>
+                <div class="gauge-card">
+                  <svg class="gauge-svg">
+                    <circle class="gauge-bg" cx="30" cy="30" r="28" />
+                    <circle class="gauge-fill grounded" id="g-grounded-ring" cx="30" cy="30" r="28" />
+                  </svg>
+                  <div class="gauge-text" id="g-grounded-val">-</div>
+                  <div class="gauge-label">Groundedness</div>
+                </div>
+                <div class="gauge-card">
+                  <svg class="gauge-svg">
+                    <circle class="gauge-bg" cx="30" cy="30" r="28" />
+                    <circle class="gauge-fill answer" id="g-answer-ring" cx="30" cy="30" r="28" />
+                  </svg>
+                  <div class="gauge-text" id="g-answer-val">-</div>
+                  <div class="gauge-label">Answer Relevance</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Retrieved Chunks Context -->
+            <div class="diagnostics-section" style="flex-grow: 1;">
+              <h4 class="section-title">Augmented Context Segments</h4>
+              <div class="chunk-list" id="t-chunk-list">
+                <div style="text-align: center; color: var(--text-muted); font-size: 12px; padding: 20px 0;">No context retrieved yet</div>
+              </div>
+            </div>
+
+            <!-- Prompt Sent to LLM -->
+            <div class="diagnostics-section">
+              <h4 class="section-title">Formatted Prompt Payload</h4>
+              <div class="prompt-wrapper">
+                <button class="btn-copy" onclick="copyPromptText()">Copy</button>
+                <pre class="prompt-code" id="t-prompt">Waiting for user query...</pre>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: Document Hub Panel -->
+      <div class="tab-panel" id="panel-docs">
+        <div class="docs-layout">
+          <!-- Left: Document List and Upload -->
+          <div class="docs-column">
+            <!-- Upload Box -->
+            <div class="dashboard-card">
+              <h4 class="section-title">Document Manager</h4>
+              <input type="file" id="file-uploader-input" accept=".pdf,.docx,.txt,.md" style="display: none;">
+              <div class="upload-area" id="dropzone">
+                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <h4>Upload Source File</h4>
+                <p>PDF, DOCX, TXT, or MD (Max 15MB)</p>
+              </div>
+
+              <!-- Rebuild trigger -->
+              <div class="ingestion-status" style="margin-top: 18px;">
+                <div class="ingest-info-text">
+                  <h4>Vector Store Synchronization</h4>
+                  <p id="sync-stats">Analyzing documents...</p>
+                </div>
+                <button class="btn btn-primary" onclick="triggerIngestion()">Sync Index</button>
+              </div>
+            </div>
+
+            <!-- Document List -->
+            <div class="dashboard-card" style="flex-grow: 1;">
+              <h4 class="section-title">Active Index Catalog</h4>
+              <div class="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Filename</th>
+                      <th>Type</th>
+                      <th>Size</th>
+                      <th>Chunks</th>
+                      <th style="text-align: right;">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="docs-table-body">
+                    <tr>
+                      <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 40px 0;">No documents indexed</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Vector Chunk Explorer -->
+          <div class="docs-column">
+            <div class="dashboard-card" style="height: 100%; display: flex; flex-direction: column;">
+              <h4 class="section-title">Vector Chunk Inspector</h4>
+              <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 12px;">Query ChromaDB directly to inspect structural segments created by recursive character text splitters.</p>
+              
+              <div class="explorer-input-wrapper">
+                <input type="text" id="chunk-search-input" placeholder="Search database chunks by keyword..." oninput="searchChunks(this.value)">
+              </div>
+
+              <div class="chunk-explorer-results" id="chunk-explorer-results">
+                <div style="text-align: center; color: var(--text-muted); margin-top: 40px; font-size: 13px;">No chunks currently loaded</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: Engine Parameters Panel -->
+      <div class="tab-panel" id="panel-config">
+        <div class="config-layout">
+          <!-- Column 1: Config sliders -->
+          <div class="dashboard-card" style="display:flex; flex-direction:column; gap:20px; overflow-y:auto;">
+            <div>
+              <h4 class="section-title">Advanced Framework Configuration</h4>
+              <form id="config-form" onsubmit="saveConfiguration(event)">
+                
+                <div class="form-group">
+                  <label for="cfg-ragmode">Retrieval Mode (RAG Architecture)</label>
+                  <select id="cfg-ragmode" class="form-control-input" style="background-color: var(--bg-input);">
+                    <option value="standard">Standard Naive RAG (Vector Search)</option>
+                    <option value="hybrid">Hybrid Search RAG (Vector + BM25 with RRF)</option>
+                    <option value="cognitive">Cognitive RAG (Multi-Query Expansion & Router)</option>
+                  </select>
+                </div>
+
+                <div class="switch-group">
+                  <div>
+                    <label for="cfg-router">Query Routing Classifier</label>
+                    <div class="switch-desc">Categorizes queries to route General, Summary, or RAG actions.</div>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="cfg-router">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div class="switch-group" style="margin-bottom:20px;">
+                  <div>
+                    <label for="cfg-rerank">Keyword-Reweighted Reranker</label>
+                    <div class="switch-desc">Re-scores chunk relevance based on keyword overlaps.</div>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="cfg-rerank">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div class="form-group">
+                  <label for="cfg-model">Large Language Model</label>
+                  <select id="cfg-model" class="form-control-input" style="background-color: var(--bg-input);">
+                    <option value="gemini-2.5-flash">gemini-2.5-flash (Standard & Fast)</option>
+                    <option value="gemini-2.5-pro">gemini-2.5-pro (Advanced Reasoning)</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label>LLM Temperature</label>
+                  <div class="form-control-slider">
+                    <input type="range" id="cfg-temp" min="0.0" max="1.0" step="0.05" oninput="updateSliderVal(this, 'val-temp')">
+                    <span class="slider-val" id="val-temp">0.1</span>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>Retriever Top-K (Context count)</label>
+                  <div class="form-control-slider">
+                    <input type="range" id="cfg-topk" min="1" max="10" step="1" oninput="updateSliderVal(this, 'val-topk')">
+                    <span class="slider-val" id="val-topk">4</span>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="cfg-chunksize">Text Chunk Size (Chars)</label>
+                  <input type="number" id="cfg-chunksize" class="form-control-input" min="100" max="4000" step="50">
+                </div>
+
+                <div class="form-group">
+                  <label for="cfg-overlap">Chunk Overlap (Chars)</label>
+                  <input type="number" id="cfg-overlap" class="form-control-input" min="0" max="1000" step="10">
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="margin-top: 10px; width: 100%;">Save Hyperparameters</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Column 2: Prompt Editor -->
+          <div class="dashboard-card" style="display: flex; flex-direction: column;">
+            <h4 class="section-title">System Prompt Template</h4>
+            <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 12px;">Configure system instructions. Use <code>{context}</code> as the placeholder where search records from ChromaDB will be inserted.</p>
+            <div style="flex-grow: 1; display: flex; flex-direction: column;">
+              <textarea id="cfg-prompt" class="form-control-input" style="flex-grow: 1; font-family: var(--font-mono); font-size: 12px; min-height: 480px;"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: Analytics Panel -->
+      <div class="tab-panel" id="panel-metrics">
+        <div class="metrics-layout">
+          <!-- Stats Strip -->
+          <div class="stats-strip">
+            <div class="stat-card">
+              <div class="stat-icon info">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <div class="stat-content">
+                <h5>Avg Latency</h5>
+                <h3 id="stat-avg-latency">0 ms</h3>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon success">
+                <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </div>
+              <div class="stat-content">
+                <h5>Avg Groundedness</h5>
+                <h3 id="stat-avg-grounded">-</h3>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </div>
+              <div class="stat-content">
+                <h5>Avg Answer Rel.</h5>
+                <h3 id="stat-avg-answer">-</h3>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon warning">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
+              <div class="stat-content">
+                <h5>Total Chunks</h5>
+                <h3 id="stat-total-chunks">0</h3>
+              </div>
+            </div>
+          </div>
+
+          <!-- Latency Graph and Performance Analytics -->
+          <div class="metrics-chart-box">
+            <div class="dashboard-card">
+              <h4 class="section-title">Query Latency Profile (Last 10 Queries)</h4>
+              <div class="svg-chart-container" id="latency-chart-wrapper">
+                <!-- SVG Chart will be rendered here dynamically -->
+                <div style="text-align: center; color: var(--text-muted); margin-top: 80px; font-size: 13.5px;">No query latency logs recorded in this session. Run chat requests to build chart.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 5: Project Details & Methodology Panel -->
+      <div class="tab-panel" id="panel-info">
+        <div class="info-layout">
+          <!-- Academic Profiler -->
+          <div class="dashboard-card profile-edit-card">
+            <h4 class="section-title">Project Metadata</h4>
+            <div class="profile-field">
+              <span>Project Title</span>
+              <p>GroundDoc-RAG: Advanced Retrieval-Augmented Generation System for Document QA</p>
+            </div>
+            
+            <form id="academic-form" onsubmit="saveAcademicDetails(event)" style="display: flex; flex-direction: column; gap: 14px;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="acad-name">Student / Author Name</label>
+                <input type="text" id="acad-name" class="form-control-input">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="acad-roll">University Roll Number / ID</label>
+                <input type="text" id="acad-roll" class="form-control-input">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="acad-course">Degree / Department Course</label>
+                <input type="text" id="acad-course" class="form-control-input">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="acad-guide">Project Guide / Supervisor</label>
+                <input type="text" id="acad-guide" class="form-control-input">
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Update Academic Details</button>
+            </form>
+          </div>
+
+          <!-- Architecture diagrams -->
+          <div class="dashboard-card architecture-card">
+            <h4 class="section-title">System Execution Architecture Flowchart</h4>
+            <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 16px;">Visualizing how document loading, vector storage in ChromaDB, query routing, query expansion, RRF hybrid search, and generative tasks interface.</p>
+            <div class="mermaid-wrapper">
+              <div class="mermaid" id="arch-mermaid">
+graph TD
+    %% Node Styling
+    classDef doc fill:#3b82f6,stroke:#1d4ed8,stroke-width:2px,color:#fff;
+    classDef chunk fill:#a855f7,stroke:#7e22ce,stroke-width:2px,color:#fff;
+    classDef embed fill:#ec4899,stroke:#be185d,stroke-width:2px,color:#fff;
+    classDef vector fill:#10b981,stroke:#047857,stroke-width:2px,color:#fff;
+    classDef user fill:#6366f1,stroke:#4338ca,stroke-width:2px,color:#fff;
+    classDef query fill:#06b6d4,stroke:#0891b2,stroke-width:2px,color:#fff;
+    classDef prompt fill:#f59e0b,stroke:#b45309,stroke-width:2px,color:#fff;
+    classDef llm fill:#84cc16,stroke:#4d7c0f,stroke-width:2px,color:#fff;
+
+    subgraph DataIngestion [Offline Ingestion Pipeline]
+        Docs[Source Docs<br>PDF, TXT, DOCX, MD]:::doc --> Loader[Doc Loaders]
+        Loader --> Splitter[Recursive Character<br>Text Splitter]:::chunk
+        Splitter --> Chunks[Text Chunks]:::chunk
+        Chunks --> EmbeddingFn[Embedding Model<br>MiniLM-L6]:::embed
+        EmbeddingFn --> ChromaDB[(Vector Database<br>ChromaDB)]:::vector
+    end
+
+    subgraph OnlineExecution [Online Retrieval-Generation Chain]
+        UserQuery[User Question]:::user --> Router{Query Router<br>Classifier}:::prompt
+        
+        Router -- GENERAL Route --> DirectLLM[Direct LLM Generator]:::llm
+        Router -- SUMMARY Route --> FetchAll[Fetch All Documents]:::vector
+        Router -- RAG Route --> RAGBranch[RAG Retrieval Pipeline]:::query
+        
+        RAGBranch --> Expansion[Multi-Query Expansion<br>3 Variants Generated]:::prompt
+        
+        %% Retrieval Modes
+        Expansion --> ModeVector[Dense Search<br>Chroma Similarity]:::query
+        Expansion --> ModeBM25[Sparse Search<br>Term BM25 Index]:::query
+        
+        ChromaDB -. Query Match .-> ModeVector
+        
+        ModeVector --> Fusion[Reciprocal Rank Fusion<br>RRF Combination]:::vector
+        ModeBM25 --> Fusion
+        
+        Fusion --> Reranker[Keyword-Reweighted<br>Reranking Filter]:::vector
+        Reranker --> PromptFormatter[Augmented Context Prompt]:::prompt
+        FetchAll --> PromptFormatter
+        
+        PromptFormatter --> LLMModel[LLM Generator<br>Gemini-2.5]:::llm
+        DirectLLM --> FinalAnswer[Answer Output<br>with Citations]:::llm
+        LLMModel --> FinalAnswer
+    end
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- --- NOTIFICATION TOAST --- -->
+  <div class="toast" id="toast">
+    <div class="toast-spinner" id="toast-spinner"></div>
+    <div class="toast-content" id="toast-message">Processing request...</div>
+  </div>
+
+  <!-- --- VECTOR STORAGE INDEX OVERLAY --- -->
+  <div class="modal-overlay" id="ingest-modal">
+    <div class="modal-card">
+      <h3>Ingestion Pipeline Processing</h3>
+      <div class="step-list">
+        <div class="step-item" id="step-scan">
+          <div class="step-icon"></div>
+          <span>Scanning data/documents directory...</span>
+        </div>
+        <div class="step-item" id="step-parse">
+          <div class="step-icon"></div>
+          <span>Parsing file structures and formats...</span>
+        </div>
+        <div class="step-item" id="step-chunk">
+          <div class="step-icon"></div>
+          <span>Executing text splitting & chunking rules...</span>
+        </div>
+        <div class="step-item" id="step-embed">
+          <div class="step-icon"></div>
+          <span>Computing text vector embeddings (MiniLM-L6)...</span>
+        </div>
+        <div class="step-item" id="step-save">
+          <div class="step-icon"></div>
+          <span>Writing indices to ChromaDB collection...</span>
+        </div>
+      </div>
+      <p style="color: var(--text-secondary); font-size: 13px; line-height: 1.5; margin-top: 12px;">This processes all documents locally and creates vector records. Do not close this browser tab.</p>
+    </div>
+  </div>
+
+<script>
+  const API_BASE = window.location.origin;
+  let activeTab = 'chat';
+  let sessionId = null;
+  let isProcessing = false;
+  let sysConfig = {};
+  
+  // Analytics state
+  let sessionQueryHistory = []; // list of diagnostic objects: {question, latency, relevance, grounded, answer}
+
+  // --- TAB NAVIGATION SWITCHER ---
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const tabName = item.getAttribute('data-tab');
+      switchTab(tabName);
+    });
+  });
+
+  function switchTab(tabName) {
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
+    
+    document.querySelector(`.nav-item[data-tab="${tabName}"]`).classList.add('active');
+    document.getElementById(`panel-${tabName}`).classList.add('active');
+    
+    activeTab = tabName;
+    
+    // Update navbar title
+    const titles = {
+      chat: 'Chat Sandbox & Pipeline Diagnostics',
+      docs: 'Document Ingestion & ChromaDB Explorer',
+      config: 'RAG Model Hyperparameters',
+      metrics: 'Project Analytics & Evaluation Dashboard',
+      info: 'Academic Project Methodology & Setup'
+    };
+    document.getElementById('navbar-title').textContent = titles[tabName] || 'Dashboard';
+
+    // Special handlers per tab
+    if (tabName === 'docs') {
+      loadDocuments();
+      searchChunks('');
+    } else if (tabName === 'metrics') {
+      renderMetricsDashboard();
+    } else if (tabName === 'info') {
+      setTimeout(() => {
+        const elem = document.getElementById('arch-mermaid');
+        if (elem && elem.getAttribute('data-processed') !== 'true') {
+          mermaid.run({ nodes: [elem] });
+        }
+      }, 50);
+    }
+  }
+
+  // --- SLIDER VALUE BINDER ---
+  function updateSliderVal(slider, valId) {
+    document.getElementById(valId).textContent = slider.value;
+  }
+
+  // --- NOTIFICATION TOAST WRAPPER ---
+  function showToast(message, showSpinner = false) {
+    const toast = document.getElementById('toast');
+    const msg = document.getElementById('toast-message');
+    const spinner = document.getElementById('toast-spinner');
+    
+    msg.textContent = message;
+    spinner.style.display = showSpinner ? 'block' : 'none';
+    
+    toast.classList.add('show');
+    
+    if (!showSpinner) {
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3500);
+    }
+  }
+
+  function hideToast() {
+    document.getElementById('toast').classList.remove('show');
+  }
+
+  // --- API OPERATIONS ---
+
+  // Load system config from backend
+  async function loadSystemConfig() {
+    try {
+      const res = await fetch(`${API_BASE}/api/config`);
+      if (res.ok) {
+        sysConfig = await res.json();
+        populateConfigForm();
+        updateStudentBadge();
+      }
+    } catch (err) {
+      console.error("Failed to load configs", err);
+    }
+  }
+
+  // Fill forms using config data
+  function populateConfigForm() {
+    document.getElementById('cfg-model').value = sysConfig.llm_model || 'gemini-2.5-flash';
+    document.getElementById('cfg-temp').value = sysConfig.llm_temperature ?? 0.1;
+    document.getElementById('val-temp').textContent = sysConfig.llm_temperature ?? 0.1;
+    document.getElementById('cfg-topk').value = sysConfig.retrieval_top_k ?? 4;
+    document.getElementById('val-topk').textContent = sysConfig.retrieval_top_k ?? 4;
+    document.getElementById('cfg-chunksize').value = sysConfig.chunk_size ?? 1000;
+    document.getElementById('cfg-overlap').value = sysConfig.chunk_overlap ?? 150;
+    document.getElementById('cfg-prompt').value = sysConfig.system_prompt || '';
+
+    // Advanced features binders
+    document.getElementById('cfg-ragmode').value = sysConfig.rag_mode || 'standard';
+    document.getElementById('cfg-router').checked = !!sysConfig.query_router_enabled;
+    document.getElementById('cfg-rerank').checked = !!sysConfig.rerank_enabled;
+
+    // Populate Academic Metadata inputs
+    document.getElementById('acad-name').value = sysConfig.student_name || '';
+    document.getElementById('acad-roll').value = sysConfig.student_roll || '';
+    document.getElementById('acad-course').value = sysConfig.student_course || '';
+    document.getElementById('acad-guide').value = sysConfig.project_guide || '';
+  }
+
+  function updateStudentBadge() {
+    document.getElementById('badge-name').textContent = sysConfig.student_name || 'Jane Doe';
+    document.getElementById('badge-roll').textContent = sysConfig.student_roll || 'CS-2026-089';
+  }
+
+  // Save Hyperparameters
+  async function saveConfiguration(e) {
+    if (e) e.preventDefault();
+    showToast("Updating parameters...", true);
+    
+    const settings = {
+      llm_model: document.getElementById('cfg-model').value,
+      llm_temperature: parseFloat(document.getElementById('cfg-temp').value),
+      retrieval_top_k: parseInt(document.getElementById('cfg-topk').value),
+      chunk_size: parseInt(document.getElementById('cfg-chunksize').value),
+      chunk_overlap: parseInt(document.getElementById('cfg-overlap').value),
+      system_prompt: document.getElementById('cfg-prompt').value,
+      
+      // Advanced options
+      rag_mode: document.getElementById('cfg-ragmode').value,
+      query_router_enabled: document.getElementById('cfg-router').checked,
+      rerank_enabled: document.getElementById('cfg-rerank').checked
+    };
+
+    try {
+      const res = await fetch(`${API_BASE}/api/config`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings)
+      });
+      const data = await res.json();
+      hideToast();
+      if (res.ok) {
+        sysConfig = { ...sysConfig, ...settings };
+        showToast("Parameters updated successfully!");
+      } else {
+        showToast("Error updating config: " + data.detail);
+      }
+    } catch (err) {
+      hideToast();
+      showToast("Connection error updating configuration");
+    }
+  }
+
+  // Save Student details
+  async function saveAcademicDetails(e) {
+    if (e) e.preventDefault();
+    showToast("Saving details...", true);
+
+    const details = {
+      student_name: document.getElementById('acad-name').value,
+      student_roll: document.getElementById('acad-roll').value,
+      student_course: document.getElementById('acad-course').value,
+      project_guide: document.getElementById('acad-guide').value
+    };
+
+    try {
+      const res = await fetch(`${API_BASE}/api/config`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(details)
+      });
+      hideToast();
+      if (res.ok) {
+        sysConfig = { ...sysConfig, ...details };
+        updateStudentBadge();
+        showToast("Academic records persisted.");
+      } else {
+        showToast("Failed to save student details.");
+      }
+    } catch (err) {
+      hideToast();
+      showToast("Network failure saving credentials.");
+    }
+  }
+
+  // --- DOCUMENT MANAGER OPERATIONS ---
+  async function loadDocuments() {
+    try {
+      const res = await fetch(`${API_BASE}/api/documents`);
+      if (res.ok) {
+        const data = await res.json();
+        renderDocumentsTable(data.documents);
+        updateDocumentSummary(data.documents);
+      }
+    } catch (err) {
+      console.error("Failed to load documents catalog", err);
+    }
+  }
+
+  function renderDocumentsTable(documents) {
+    const tbody = document.getElementById('docs-table-body');
+    if (!documents || documents.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 40px 0;">No documents in index. Upload a file above.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = '';
+    documents.forEach(doc => {
+      const tr = document.createElement('tr');
+      
+      const sizeKB = (doc.size_bytes / 1024).toFixed(1);
+      const mDate = new Date(doc.modified_at * 1000).toLocaleString();
+
+      tr.innerHTML = `
+        <td class="tbl-filename">${escapeHtml(doc.name)}</td>
+        <td><span style="font-family: var(--font-mono); font-size: 11px;">${doc.extension}</span></td>
+        <td>${sizeKB} KB</td>
+        <td><span style="color: var(--primary); font-weight: 600;">${doc.chunks_count}</span> chunks</td>
+        <td style="text-align: right;">
+          <button class="btn btn-danger" style="padding: 4px 8px; font-size: 11.5px;" onclick="deleteDocument('${escapeHtml(doc.name)}')">Delete</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function updateDocumentSummary(documents) {
+    let totalChunks = 0;
+    documents.forEach(d => totalChunks += d.chunks_count);
+    
+    document.getElementById('sync-stats').textContent = `${documents.length} files loaded (${totalChunks} chunks in database)`;
+    document.getElementById('stat-total-chunks').textContent = totalChunks;
+  }
+
+  // Delete document
+  async function deleteDocument(filename) {
+    if (!confirm(`Are you sure you want to delete "${filename}"? This will clear its file and vector chunks.`)) return;
+    
+    showToast(`Deleting ${filename}...`, true);
+    try {
+      const res = await fetch(`${API_BASE}/api/documents/${encodeURIComponent(filename)}`, {
+        method: 'DELETE'
+      });
+      hideToast();
+      if (res.ok) {
+        showToast("Document deleted successfully.");
+        loadDocuments();
+        searchChunks(document.getElementById('chunk-search-input').value);
+      } else {
+        const data = await res.json();
+        showToast("Error: " + data.detail);
+      }
+    } catch (err) {
+      hideToast();
+      showToast("Error connecting to delete endpoint");
+    }
+  }
+
+  // Drag and Drop Upload
+  const dropzone = document.getElementById('dropzone');
+  const uploaderInput = document.getElementById('file-uploader-input');
+
+  dropzone.addEventListener('click', () => uploaderInput.click());
+  
+  dropzone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropzone.style.borderColor = 'var(--primary)';
+    dropzone.style.backgroundColor = 'rgba(99, 102, 241, 0.05)';
+  });
+
+  dropzone.addEventListener('dragleave', () => {
+    dropzone.style.borderColor = 'rgba(99, 102, 241, 0.25)';
+    dropzone.style.backgroundColor = 'rgba(99, 102, 241, 0.01)';
+  });
+
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.style.borderColor = 'rgba(99, 102, 241, 0.25)';
+    dropzone.style.backgroundColor = 'rgba(99, 102, 241, 0.01)';
+    if (e.dataTransfer.files.length) {
+      uploadFile(e.dataTransfer.files[0]);
+    }
+  });
+
+  uploaderInput.addEventListener('change', () => {
+    if (uploaderInput.files.length) {
+      uploadFile(uploaderInput.files[0]);
+    }
+  });
+
+  async function uploadFile(file) {
+    showToast(`Uploading ${file.name}...`, true);
+    
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch(`${API_BASE}/api/documents/upload`, {
+        method: 'POST',
+        body: formData
+      });
+      hideToast();
+      if (res.ok) {
+        showToast("Document uploaded successfully. Sync index to vectorize.");
+        loadDocuments();
+      } else {
+        const data = await res.json();
+        showToast("Upload failed: " + (data.detail || "Unsupported format"));
+      }
+    } catch (err) {
+      hideToast();
+      showToast("Error uploading file to server.");
+    }
+  }
+
+  // Dynamic Ingestion/Vectorization steps loader animation
+  async function triggerIngestion() {
+    const modal = document.getElementById('ingest-modal');
+    modal.classList.add('active');
+    
+    const steps = ['scan', 'parse', 'chunk', 'embed', 'save'];
+    
+    // Reset steps UI
+    steps.forEach(s => {
+      const el = document.getElementById(`step-${s}`);
+      el.className = 'step-item';
+    });
+
+    const runStepAnimation = (stepIdx) => {
+      return new Promise((resolve) => {
+        const stepId = steps[stepIdx];
+        const el = document.getElementById(`step-${stepId}`);
+        el.className = 'step-item active';
+        
+        setTimeout(() => {
+          el.className = 'step-item done';
+          resolve();
+        }, 1100); // Simulate realistic process times for UI visual satisfaction
+      });
+    };
+
+    try {
+      // Step 1: Scan
+      await runStepAnimation(0);
+      // Step 2: Parse
+      await runStepAnimation(1);
+      // Step 3: Chunk
+      await runStepAnimation(2);
+      // Step 4: Embed (starts API call in background)
+      const embedPromise = runStepAnimation(3);
+      
+      const resPromise = fetch(`${API_BASE}/ingest`, { method: 'POST' });
+      await embedPromise;
+      
+      // Step 5: Save
+      const saveEl = document.getElementById('step-save');
+      saveEl.className = 'step-item active';
+      
+      const res = await resPromise;
+      const data = await res.json();
+      
+      setTimeout(() => {
+        saveEl.className = 'step-item done';
+        setTimeout(() => {
+          modal.classList.remove('active');
+          if (res.ok) {
+            showToast(`Ingestion complete! ${data.chunks_indexed} chunks indexed.`);
+            loadDocuments();
+          } else {
+            showToast("Ingestion failed: " + data.detail);
+          }
+        }, 600);
+      }, 1000);
+      
+    } catch (err) {
+      console.error(err);
+      modal.classList.remove('active');
+      showToast("Synchronization failed due to error.");
+    }
+  }
+
+  // --- VECTOR DB CHUNK EXPLORER SEARCH ---
+  let debounceTimeout = null;
+  function searchChunks(query) {
+    clearTimeout(debounceTimeout);
+    debounceTimeout = setTimeout(async () => {
+      const resultsDiv = document.getElementById('chunk-explorer-results');
+      resultsDiv.innerHTML = `<div style="text-align: center; color: var(--text-muted); margin-top: 40px; font-size: 13.5px;"><div class="toast-spinner" style="display:inline-block; margin-bottom: 10px;"></div><br>Searching Chroma DB...</div>`;
+      
+      try {
+        const res = await fetch(`${API_BASE}/api/chunks?query=${encodeURIComponent(query)}`);
+        if (res.ok) {
+          const data = await res.json();
+          renderChunksExplorer(data.chunks);
+        } else {
+          resultsDiv.innerHTML = `<div style="text-align: center; color: var(--danger); margin-top: 40px; font-size: 13.5px;">Error loading DB segments</div>`;
+        }
+      } catch (err) {
+        resultsDiv.innerHTML = `<div style="text-align: center; color: var(--danger); margin-top: 40px; font-size: 13.5px;">Network failure searching database</div>`;
+      }
+    }, 300);
+  }
+
+  function renderChunksExplorer(chunks) {
+    const resultsDiv = document.getElementById('chunk-explorer-results');
+    if (!chunks || chunks.length === 0) {
+      resultsDiv.innerHTML = `<div style="text-align: center; color: var(--text-muted); margin-top: 40px; font-size: 13px;">No chunks matching query in database</div>`;
+      return;
+    }
+
+    resultsDiv.innerHTML = '';
+    chunks.forEach((chunk, index) => {
+      const card = document.createElement('div');
+      card.className = 'chunk-card';
+      card.innerHTML = `
+        <div class="chunk-card-header">
+          <span class="chunk-source">${escapeHtml(chunk.source)}</span>
+          <span style="font-family: var(--font-mono); color: var(--text-muted);">ID: #${escapeHtml(chunk.id.substring(0, 8))}</span>
+        </div>
+        <div class="chunk-text" style="max-height: 120px; font-family: var(--font-mono); font-size: 11.5px; background: rgba(0,0,0,0.1); padding: 8px; border-radius: 4px;">${escapeHtml(chunk.text)}</div>
+      `;
+      resultsDiv.appendChild(card);
+    });
+  }
+
+  // --- CHAT SANDBOX OPERATIONS ---
+  const chatInput = document.getElementById('chat-input');
+  const chatSendBtn = document.getElementById('chat-send-btn');
+  const chatMessages = document.getElementById('chat-messages');
+
+  // Auto-grow textarea
+  chatInput.addEventListener('input', () => {
+    chatInput.style.height = 'auto';
+    chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
+  });
+
+  chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendChat();
+    }
+  });
+
+  chatSendBtn.addEventListener('click', sendChat);
+
+  function quickSend(question) {
+    chatInput.value = question;
+    sendChat();
+  }
+
+  async function sendChat() {
+    const text = chatInput.value.trim();
+    if (!text || isProcessing) return;
+
+    // UI State block
+    isProcessing = true;
+    chatSendBtn.disabled = true;
+    chatInput.value = '';
+    chatInput.style.height = 'auto';
+
+    // Remove empty state if visible
+    const emptyState = document.getElementById('chat-empty');
+    if (emptyState) emptyState.remove();
+
+    // 1. Render User Message Bubble
+    appendMessage('user', text);
+    scrollChatToBottom();
+
+    // 2. Render Bot thinking bubble
+    const thinkingId = appendThinkingBubble();
+    scrollChatToBottom();
+
+    try {
+      const res = await fetch(`${API_BASE}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: text, session_id: sessionId })
+      });
+      const data = await res.json();
+      removeThinkingBubble(thinkingId);
+
+      if (res.ok) {
+        sessionId = data.session_id;
+        // 3. Render Bot Response
+        appendMessage('bot', data.answer, data.sources);
+        
+        // 4. Render Telemetry & Diagnostics
+        if (data.diagnostics) {
+          updateDiagnostics(data.diagnostics, text, data.answer);
+        }
+      } else {
+        appendErrorMessage(data.detail || "Server failed to compile grounded answer.");
+      }
+    } catch (err) {
+      removeThinkingBubble(thinkingId);
+      appendErrorMessage("Failed to connect to the RAG backend. Make sure FastAPI server is running.");
+    } finally {
+      isProcessing = false;
+      chatSendBtn.disabled = false;
+      chatInput.focus();
+      scrollChatToBottom();
+    }
+  }
+
+  function appendMessage(role, text, sources = []) {
+    const bubble = document.createElement('div');
+    bubble.className = `msg-bubble ${role}`;
+    
+    const avatarLetter = role === 'user' ? 'U' : 'AI';
+    
+    let sourcesHtml = '';
+    if (sources && sources.length > 0) {
+      sourcesHtml = `<div class="msg-sources">`;
+      sources.forEach(src => {
+        sourcesHtml += `<span class="source-chip">${escapeHtml(src)}</span>`;
+      });
+      sourcesHtml += `</div>`;
+    }
+
+    bubble.innerHTML = `
+      <div class="avatar">${avatarLetter}</div>
+      <div class="msg-text-wrapper">
+        <div class="msg-text">${escapeHtml(text).replace(/\n/g, '<br>')}</div>
+        ${sourcesHtml}
+      </div>
+    `;
+    chatMessages.appendChild(bubble);
+  }
+
+  function appendThinkingBubble() {
+    const id = 'think-' + Date.now();
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble bot';
+    bubble.id = id;
+    bubble.innerHTML = `
+      <div class="avatar">AI</div>
+      <div class="msg-text-wrapper">
+        <div class="msg-text" style="display: flex; align-items: center; gap: 8px; color: var(--text-muted);">
+          <div class="toast-spinner"></div>
+          <span>Retrieving sources & synthesizing...</span>
+        </div>
+      </div>
+    `;
+    chatMessages.appendChild(bubble);
+    return id;
+  }
+
+  function removeThinkingBubble(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+  }
+
+  function appendErrorMessage(message) {
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble bot';
+    bubble.innerHTML = `
+      <div class="avatar" style="background-color: rgba(239, 68, 68, 0.15); color: var(--danger);">!</div>
+      <div class="msg-text-wrapper">
+        <div class="msg-text" style="border-color: rgba(239, 68, 68, 0.2); background-color: rgba(239, 68, 68, 0.05); color: #fca5a5;">
+          ${escapeHtml(message)}
+        </div>
+      </div>
+    `;
+    chatMessages.appendChild(bubble);
+  }
+
+  function scrollChatToBottom() {
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  // --- RAG REAL-TIME DIAGNOSTIC LOADER ---
+  function updateDiagnostics(diagnostics, question, answer) {
+    // 1. Latency telemetry
+    const rTime = diagnostics.retrieval_latency_ms;
+    const gTime = diagnostics.generation_latency_ms;
+    const totalTime = diagnostics.total_latency_ms;
+
+    document.getElementById('t-retrieve').textContent = `${rTime} ms`;
+    document.getElementById('t-gen').textContent = `${gTime} ms`;
+    document.getElementById('t-total').textContent = `${totalTime} ms`;
+
+    const rPercent = (rTime / Math.max(1, totalTime)) * 100;
+    const gPercent = (gTime / Math.max(1, totalTime)) * 100;
+
+    document.getElementById('bar-retrieval').style.width = `${rPercent}%`;
+    document.getElementById('bar-generation').style.width = `${gPercent}%`;
+
+    // 2. Cognitive Routing and Rerank Badges
+    const activeModeEl = document.getElementById('diag-active-mode');
+    const routeDecisionEl = document.getElementById('diag-route-decision');
+    const rerankAppliedEl = document.getElementById('diag-rerank-applied');
+
+    const modeLabels = {
+      standard: "Standard (Naive)",
+      hybrid: "Hybrid (RRF)",
+      cognitive: "Cognitive RAG"
+    };
+
+    activeModeEl.textContent = modeLabels[diagnostics.rag_mode] || "Standard";
+    activeModeEl.className = `badge ${diagnostics.rag_mode === 'cognitive' ? 'primary' : (diagnostics.rag_mode === 'hybrid' ? 'secondary' : 'badge')}`;
+    
+    routeDecisionEl.textContent = diagnostics.routing_decision || "RAG";
+    routeDecisionEl.className = `badge ${diagnostics.routing_decision === 'GENERAL' ? 'warning' : (diagnostics.routing_decision === 'SUMMARY' ? 'info' : 'success')}`;
+
+    rerankAppliedEl.textContent = diagnostics.rerank_applied ? "Active" : "Off";
+    rerankAppliedEl.className = `badge ${diagnostics.rerank_applied ? 'success' : 'badge'}`;
+
+    // 3. Multi-Query Expansion Display
+    const expansionBox = document.getElementById('diag-expansion-box');
+    const expansionList = document.getElementById('diag-expansion-list');
+    if (diagnostics.expanded_queries && diagnostics.expanded_queries.length > 0) {
+      expansionBox.style.display = 'block';
+      expansionList.innerHTML = '';
+      diagnostics.expanded_queries.forEach(q => {
+        const li = document.createElement('li');
+        li.textContent = q;
+        expansionList.appendChild(li);
+      });
+    } else {
+      expansionBox.style.display = 'none';
+    }
+
+    // 4. Hybrid RRF Fusion Logs Display
+    const hybridBox = document.getElementById('diag-hybrid-box');
+    const hybridTable = document.getElementById('diag-hybrid-table');
+    if (diagnostics.hybrid_fusion_log && diagnostics.hybrid_fusion_log.length > 0) {
+      hybridBox.style.display = 'block';
+      hybridTable.innerHTML = '';
+      diagnostics.hybrid_fusion_log.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="color:var(--info); font-family:var(--font-mono);">${escapeHtml(row.source)}</td>
+          <td style="text-align:center;">${row.vector_rank}</td>
+          <td style="text-align:center;">${row.bm25_rank}</td>
+          <td style="font-family:var(--font-mono); color:var(--success); font-weight:600;">${row.rrf_score}</td>
+        `;
+        hybridTable.appendChild(tr);
+      });
+    } else {
+      hybridBox.style.display = 'none';
+    }
+
+    // 5. Evaluation Triad Gauges
+    const metrics = diagnostics.metrics || { context_relevance: 0, groundedness: 0, answer_relevance: 0 };
+    setCircularGauge('relevance', metrics.context_relevance);
+    setCircularGauge('grounded', metrics.groundedness);
+    setCircularGauge('answer', metrics.answer_relevance);
+
+    // 6. Retrieved Chunks
+    const chunkList = document.getElementById('t-chunk-list');
+    chunkList.innerHTML = '';
+    
+    if (diagnostics.retrieved_chunks && diagnostics.retrieved_chunks.length > 0) {
+      diagnostics.retrieved_chunks.forEach(chunk => {
+        const chunkCard = document.createElement('div');
+        chunkCard.className = 'chunk-card';
+        chunkCard.innerHTML = `
+          <div class="chunk-card-header">
+            <span class="chunk-source">${escapeHtml(chunk.source)}</span>
+            <span class="chunk-similarity">${chunk.similarity}% similarity</span>
+          </div>
+          <div class="chunk-text">${escapeHtml(chunk.text)}</div>
+        `;
+        chunkList.appendChild(chunkCard);
+      });
+    } else {
+      chunkList.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 12px; padding: 20px 0;">No chunks retrieved</div>`;
+    }
+
+    // 7. Formatted Prompt
+    document.getElementById('t-prompt').textContent = diagnostics.formatted_prompt || 'N/A';
+
+    // 8. Append to session history for Analytics
+    sessionQueryHistory.push({
+      question: question,
+      latency: totalTime,
+      relevance: metrics.context_relevance,
+      grounded: metrics.groundedness,
+      answer: metrics.answer_relevance
+    });
+  }
+
+  function setCircularGauge(gaugeName, value) {
+    const ring = document.getElementById(`g-${gaugeName}-ring`);
+    const valText = document.getElementById(`g-${gaugeName}-val`);
+    
+    if (!ring || !valText) return;
+    
+    valText.textContent = `${value}%`;
+    
+    const circumference = 175.9;
+    const offset = circumference - (value / 100) * circumference;
+    ring.style.strokeDashoffset = offset;
+  }
+
+  function copyPromptText() {
+    const text = document.getElementById('t-prompt').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      showToast("Prompt copied to clipboard!");
+    }).catch(err => {
+      showToast("Failed to copy text.");
+    });
+  }
+
+  // --- ANALYTICS DASHBOARD DRAW ---
+  function renderMetricsDashboard() {
+    if (sessionQueryHistory.length === 0) {
+      document.getElementById('stat-avg-latency').textContent = '0 ms';
+      document.getElementById('stat-avg-grounded').textContent = '-';
+      document.getElementById('stat-avg-answer').textContent = '-';
+      document.getElementById('latency-chart-wrapper').innerHTML = `
+        <div style="text-align: center; color: var(--text-muted); margin-top: 80px; font-size: 13.5px;">No query latency logs recorded in this session. Run chat requests to build chart.</div>
+      `;
+      return;
+    }
+
+    let sumLatency = 0;
+    let sumGrounded = 0;
+    let sumAnswer = 0;
+
+    sessionQueryHistory.forEach(q => {
+      sumLatency += q.latency;
+      sumGrounded += q.grounded;
+      sumAnswer += q.answer;
+    });
+
+    const avgLatency = Math.round(sumLatency / sessionQueryHistory.length);
+    const avgGrounded = Math.round(sumGrounded / sessionQueryHistory.length);
+    const avgAnswer = Math.round(sumAnswer / sessionQueryHistory.length);
+
+    document.getElementById('stat-avg-latency').textContent = `${avgLatency} ms`;
+    document.getElementById('stat-avg-grounded').textContent = `${avgGrounded}%`;
+    document.getElementById('stat-avg-answer').textContent = `${avgAnswer}%`;
+
+    renderLatencyChart();
+  }
+
+  function renderLatencyChart() {
+    const container = document.getElementById('latency-chart-wrapper');
+    const records = sessionQueryHistory.slice(-10); // get last 10
+    
+    const w = container.clientWidth;
+    const h = 240;
+    const padding = 40;
+    
+    const chartW = w - padding * 2;
+    const chartH = h - padding * 2;
+    
+    let maxVal = Math.max(...records.map(r => r.latency));
+    maxVal = Math.max(1000, Math.ceil(maxVal / 500) * 500);
+    
+    let points = '';
+    const pointsList = [];
+    
+    records.forEach((rec, idx) => {
+      const x = padding + (idx / Math.max(1, records.length - 1)) * chartW;
+      const y = h - padding - (rec.latency / maxVal) * chartH;
+      pointsList.push({x, y, val: rec.latency});
+      if (idx === 0) {
+        points += `${x},${y}`;
+      } else {
+        points += ` L ${x},${y}`;
+      }
+    });
+
+    let gridLines = '';
+    const yTicks = 4;
+    for (let i = 0; i <= yTicks; i++) {
+      const val = (i / yTicks) * maxVal;
+      const y = h - padding - (i / yTicks) * chartH;
+      gridLines += `
+        <line x1="${padding}" y1="${y}" x2="${w - padding}" y2="${y}" stroke="rgba(255,255,255,0.04)" stroke-width="1" />
+        <text x="${padding - 8}" y="${y + 4}" fill="var(--text-muted)" font-family="var(--font-mono)" font-size="9" text-anchor="end">${val}ms</text>
+      `;
+    }
+
+    let circles = '';
+    pointsList.forEach((pt, idx) => {
+      circles += `
+        <circle cx="${pt.x}" cy="${pt.y}" r="4" fill="var(--primary)" stroke="var(--bg-darker)" stroke-width="1.5" />
+        <text x="${pt.x}" y="${pt.y - 10}" fill="var(--text-primary)" font-family="var(--font-mono)" font-size="9" text-anchor="middle">${pt.val}ms</text>
+        <text x="${pt.x}" y="${h - padding + 16}" fill="var(--text-muted)" font-family="var(--font-mono)" font-size="9" text-anchor="middle">Q${sessionQueryHistory.length - records.length + idx + 1}</text>
+      `;
+    });
+
+    const svg = `
+      <svg width="100%" height="100%" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" style="overflow: visible;">
+        <defs>
+          <linearGradient id="chart-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="var(--primary)" stop-opacity="0.2" />
+            <stop offset="100%" stop-color="var(--primary)" stop-opacity="0.0" />
+          </linearGradient>
+        </defs>
+        ${gridLines}
+        
+        <!-- Filled Area -->
+        ${records.length > 1 ? `
+          <path d="M ${pointsList[0].x},${h - padding} L ${points} L ${pointsList[pointsList.length-1].x},${h - padding} Z" fill="url(#chart-grad)" />
+          <!-- Path Line -->
+          <path d="M ${points}" fill="none" stroke="var(--primary)" stroke-width="2" />
+        ` : ''}
+        
+        <!-- Y Axis -->
+        <line x1="${padding}" y1="${padding}" x2="${padding}" y2="${h - padding}" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+        <!-- X Axis -->
+        <line x1="${padding}" y1="${h - padding}" x2="${w - padding}" y2="${h - padding}" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+        
+        ${circles}
+      </svg>
+    `;
+    container.innerHTML = svg;
+  }
+
+  // --- UTILITIES ---
+  function escapeHtml(text) {
+    if (!text) return '';
+    return text
+      .toString()
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  // Initialize Page configurations on window ready
+  window.addEventListener('DOMContentLoaded', () => {
+    loadSystemConfig();
+    loadDocuments();
+  });
+</script>
+</body>
+</html>
