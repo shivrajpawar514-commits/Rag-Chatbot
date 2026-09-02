@@ -186,8 +186,4 @@ All settings can be configured dynamically through the UI or defined in `.env`:
 
 ---
 
-## 🎓 Academic / Project Presentation
 
-This system is structured as a comprehensive **Final Year Engineering Project**:
-- **Author Profiles**: Update student name, PRN/Roll number, and project guide in the **Project Details** tab or `data/project_config.json`.
-- **Live Architecture**: View dynamic execution flowcharts directly in the browser powered by Mermaid.js.
